@@ -2,157 +2,50 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <script src="script.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script src="script.js"></script>
     <link rel="stylesheet" href="styles.css">
-    <title>Minesweeper Mobile</title>
+    <title>💣 Minesweeper</title>
 </head>
 <body>
-    <div class="game-container">
-        <div class="header">
-            <h1 class="title">💣 Minesweeper Mobile</h1>
-            <p class="subtitle">Find all mines without detonating any!</p>
-        </div>
-
-        <div class="mobile-controls">
-            <button class="btn primary" onclick="newGame()">🎮 New Game</button>
-            <button class="btn" id="flag-btn" onclick="toggleFlagMode()">🚩 Flag Mode</button>
-        </div>
-
-        <div class="stats-panel">
-            <div class="stat-card">
-                <div class="stat-value" id="mines-count">10</div>
-                <div class="stat-label">Mines Left</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="timer">00:00</div>
-                <div class="stat-label">Time</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="tiles-left">54</div>
-                <div class="stat-label">Tiles Left</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="score">0</div>
-                <div class="stat-label">Score</div>
-            </div>
-        </div>
-
+    <div class="container">
+        <h1 id="title">💣 Minesweeper</h1>
+        
         <div class="controls">
-            <label>Difficulty:</label>
-            <div class="difficulty-buttons">
-                <button class="btn active" onclick="setDifficulty('beginner')">Beginner</button>
-                <button class="btn" onclick="setDifficulty('intermediate')">Medium</button>
-                <button class="btn" onclick="setDifficulty('expert')">Expert</button>
+            <button class="lang-btn active" onclick="setLanguage('en')">EN</button>
+            <button class="lang-btn" onclick="setLanguage('es')">ES</button>
+            <button class="lang-btn" onclick="setLanguage('pt')">PT</button>
+        </div>
+        
+        <div class="stats">
+            <div class="stat">
+                <div>💣</div>
+                <div id="mines">10</div>
+            </div>
+            <div class="stat">
+                <div>⏱️</div>
+                <div id="time">0</div>
             </div>
         </div>
-
-        <div class="game-actions">
-            <button class="btn" onclick="toggleSettings()">⚙️ Settings</button>
-            <button class="btn" onclick="showLeaderboard()">🏆 Scores</button>
-            <button class="btn" onclick="showHelp()">❓ Help</button>
-        </div>
-
-        <div class="board-container">
-            <div class="board" id="board"></div>
-        </div>
-
-        <div class="touch-instructions">
-            <div class="touch-item">
-                <div class="touch-icon">👆</div>
-                <div>Tap to reveal tile</div>
-            </div>
-            <div class="touch-item">
-                <div class="touch-icon">🖐️</div>
-                <div>Long press to place flag</div>
-            </div>
-        </div>
-
-        <div class="settings-panel" id="settings-panel">
-            <h3>Game Settings</h3>
-            <div class="setting-row">
-                <div class="setting-label">Sound Effects:</div>
-                <input type="checkbox" id="sound-toggle" checked onchange="toggleSound()">
-            </div>
-            <div class="setting-row">
-                <div class="setting-label">Animations:</div>
-                <input type="checkbox" id="animation-toggle" checked onchange="toggleAnimations()">
-            </div>
-            <div class="setting-row">
-                <div class="setting-label">Theme:</div>
-                <div class="themes">
-                    <div class="theme-btn theme-classic active" onclick="setTheme('classic')"></div>
-                    <div class="theme-btn theme-ocean" onclick="setTheme('ocean')"></div>
-                    <div class="theme-btn theme-sunset" onclick="setTheme('sunset')"></div>
-                    <div class="theme-btn theme-forest" onclick="setTheme('forest')"></div>
-                    <div class="theme-btn theme-dark" onclick="setTheme('dark')"></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="achievements" id="achievements">
-            <div class="achievement" data-achievement="first-win">
-                <div class="achievement-icon">🏆</div>
-                <div class="achievement-title">First Win</div>
-            </div>
-            <div class="achievement" data-achievement="speed-demon">
-                <div class="achievement-icon">⚡</div>
-                <div class="achievement-title">Speed Run</div>
-            </div>
-            <div class="achievement" data-achievement="perfectionist">
-                <div class="achievement-icon">💎</div>
-                <div class="achievement-title">Perfect</div>
-            </div>
-            <div class="achievement" data-achievement="expert-cleared">
-                <div class="achievement-icon">🎯</div>
-                <div class="achievement-title">Expert</div>
-            </div>
+        
+        <button class="btn" onclick="newGame()" id="newGameBtn">🎮 New Game</button>
+        <button class="btn" onclick="toggleFlag()" id="flagBtn">🚩 Flag</button>
+        
+        <div class="board" id="board"></div>
+        
+        <div class="message" id="message"></div>
+        
+        <div class="instructions" id="instructions">
+            <strong>How to play:</strong><br>
+            • Click to reveal squares<br>
+            • Right-click or use Flag button to mark mines<br>
+            • Numbers show nearby mines<br>
+            • Find all mines to win!
         </div>
     </div>
 
-    <!-- Game Over Modal -->
-    <div class="modal" id="game-modal">
-        <div class="modal-content">
-            <h2 class="modal-title" id="modal-title">Game Over!</h2>
-            <p id="modal-message">Better luck next time!</p>
-            <div id="modal-stats"></div>
-            <div class="modal-buttons">
-                <button class="btn primary" onclick="newGame(); closeModal()">Play Again</button>
-                <button class="btn" onclick="closeModal()">Close</button>
-            </div>
-        </div>
-    </div>
+    <script>
 
-    <!-- Leaderboard Modal -->
-    <div class="modal" id="leaderboard-modal">
-        <div class="modal-content">
-            <h2 class="modal-title">🏆 High Scores</h2>
-            <div class="leaderboard" id="leaderboard-content"></div>
-            <button class="btn" onclick="closeLeaderboard()">Close</button>
-        </div>
-    </div>
-
-    <!-- Help Modal -->
-    <div class="modal" id="help-modal">
-        <div class="modal-content">
-            <h2 class="modal-title">How to Play</h2>
-            <div style="text-align: left; padding: 10px 0;">
-                <p><strong>Goal:</strong> Clear the minefield without detonating any mines.</p>
-                <p><strong>Controls:</strong></p>
-                <ul style="padding-left: 20px; margin: 10px 0;">
-                    <li><strong>Tap a tile</strong> to reveal it</li>
-                    <li><strong>Long press</strong> to place/remove a flag</li>
-                    <li>Numbers show mines in adjacent tiles</li>
-                </ul>
-                <p><strong>Tips:</strong></p>
-                <ul style="padding-left: 20px; margin: 10px 0;">
-                    <li>Start with corners and edges</li>
-                    <li>Use flags to mark potential mines</li>
-                    <li>Look for patterns in the numbers</li>
-                </ul>
-            </div>
-            <button class="btn primary" onclick="closeHelp()">Got it!</button>
-        </div>
-    </div>
+    </script>
 </body>
 </html>
