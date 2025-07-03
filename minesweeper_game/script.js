@@ -19,7 +19,7 @@ const translations = {
         newGame: '🎮 New Game',
         flag: '🚩 Flag',
         flagMode: '🚩 Flag ON',
-        instructions: '<strong>How to play:</strong><br>• Click to reveal squares<br>• Right-click or use Flag button to mark mines<br>• Numbers show nearby mines<br>• Find all mines to win!',
+        instructions: '<strong>How to play Minesweeper:</strong><br><br><strong>🎯 Goal:</strong> Clear all squares without hitting a mine!<br><br><strong>🖱️ Basic Controls:</strong><br>• <strong>Left-click:</strong> Reveal a square<br>• <strong>Right-click or Flag button:</strong> Mark/unmark suspected mines<br><br><strong>🔢 Understanding Numbers:</strong><br>• Numbers (1-8) show how many mines are in the 8 surrounding squares<br>• If you see "3", there are exactly 3 mines in adjacent squares<br>• Use this info to deduce where mines are located<br><br><strong>🧠 Strategy Tips:</strong><br>• Start by clicking corners or edges - they\'re usually safer<br>• When you find a number, count adjacent flags and revealed squares<br>• If a number equals the flags around it, other adjacent squares are safe<br>• If remaining unrevealed squares equal the number, they\'re all mines<br><br><strong>🏆 Winning:</strong> Reveal all safe squares OR flag all mines correctly<br><strong>💥 Losing:</strong> Click on a mine - game over!',
         win: '🎉 You Win!',
         lose: '💥 Game Over!',
         clickToStart: 'Click any square to start!'
@@ -29,7 +29,7 @@ const translations = {
         newGame: '🎮 Nuevo Juego',
         flag: '🚩 Bandera',
         flagMode: '🚩 Bandera ON',
-        instructions: '<strong>Cómo jugar:</strong><br>• Clic para revelar casillas<br>• Clic derecho o botón Bandera para marcar minas<br>• Los números muestran minas cercanas<br>• ¡Encuentra todas las minas para ganar!',
+        instructions: '<strong>Cómo jugar Buscaminas:</strong><br><br><strong>🎯 Objetivo:</strong> ¡Descubre todas las casillas sin tocar una mina!<br><br><strong>🖱️ Controles Básicos:</strong><br>• <strong>Clic izquierdo:</strong> Revelar una casilla<br>• <strong>Clic derecho o botón Bandera:</strong> Marcar/desmarcar minas sospechosas<br><br><strong>🔢 Entendiendo los Números:</strong><br>• Los números (1-8) muestran cuántas minas hay en las 8 casillas circundantes<br>• Si ves un "3", hay exactamente 3 minas en casillas adyacentes<br>• Usa esta información para deducir dónde están las minas<br><br><strong>🧠 Consejos Estratégicos:</strong><br>• Comienza haciendo clic en esquinas o bordes - suelen ser más seguros<br>• Cuando encuentres un número, cuenta las banderas y casillas reveladas adyacentes<br>• Si un número es igual a las banderas que lo rodean, las otras casillas adyacentes son seguras<br>• Si las casillas no reveladas restantes igualan el número, todas son minas<br><br><strong>🏆 Ganar:</strong> Revela todas las casillas seguras O marca todas las minas correctamente<br><strong>💥 Perder:</strong> Hacer clic en una mina - ¡fin del juego!',
         win: '🎉 ¡Ganaste!',
         lose: '💥 ¡Juego Terminado!',
         clickToStart: '¡Haz clic en cualquier casilla para empezar!'
@@ -39,7 +39,7 @@ const translations = {
         newGame: '🎮 Novo Jogo',
         flag: '🚩 Bandeira',
         flagMode: '🚩 Bandeira ON',
-        instructions: '<strong>Como jogar:</strong><br>• Clique para revelar quadrados<br>• Clique direito ou botão Bandeira para marcar minas<br>• Números mostram minas próximas<br>• Encontre todas as minas para ganhar!',
+        instructions: '<strong>Como jogar Campo Minado:</strong><br><br><strong>🎯 Objetivo:</strong> Limpe todos os quadrados sem acertar uma mina!<br><br><strong>🖱️ Controles Básicos:</strong><br>• <strong>Clique esquerdo:</strong> Revelar um quadrado<br>• <strong>Clique direito ou botão Bandeira:</strong> Marcar/desmarcar minas suspeitas<br><br><strong>🔢 Entendendo os Números:</strong><br>• Números (1-8) mostram quantas minas existem nos 8 quadrados ao redor<br>• Se você vê "3", há exatamente 3 minas em quadrados adjacentes<br>• Use esta informação para deduzir onde as minas estão localizadas<br><br><strong>🧠 Dicas de Estratégia:</strong><br>• Comece clicando em cantos ou bordas - geralmente são mais seguros<br>• Quando encontrar um número, conte bandeiras e quadrados revelados adjacentes<br>• Se um número é igual às bandeiras ao redor, outros quadrados adjacentes são seguros<br>• Se quadrados não revelados restantes igualam o número, todos são minas<br><br><strong>🏆 Vencer:</strong> Revele todos os quadrados seguros OU marque todas as minas corretamente<br><strong>💥 Perder:</strong> Clique em uma mina - fim de jogo!',
         win: '🎉 Você Ganhou!',
         lose: '💥 Fim de Jogo!',
         clickToStart: 'Clique em qualquer quadrado para começar!'
