@@ -214,13 +214,15 @@ h1 {
     display: inline-grid;
     gap: 2px;
     background: var(--dark-bg);
-    padding: 15px;
+    padding: 10px;
     border-radius: 12px;
     margin-bottom: 20px;
     border: 2px solid var(--border-color);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-    max-width: 100%;
+    max-width: 95vw;
+    max-height: 70vh;
     overflow: auto;
+    justify-self: center;
 }
 
 /* Simple 3D Cells */
@@ -403,12 +405,23 @@ h1 {
 
 /* Mobile Touch Improvements */
 @media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+    
+    .board {
+        padding: 8px;
+        gap: 1px;
+        max-width: 98vw;
+        max-height: 60vh;
+    }
+    
     .cell {
-        /* Improve touch targets for mobile */
-        min-width: 44px;
-        min-height: 44px;
-        width: max(40px, 8vw);
-        height: max(40px, 8vw);
+        /* Responsive cell sizing for mobile */
+        width: min(35px, 10vw);
+        height: min(35px, 10vw);
+        font-size: 0.85rem;
+        border-radius: 4px;
         /* Ensure touch events work properly */
         touch-action: manipulation;
         -webkit-touch-callout: none;
@@ -432,10 +445,20 @@ h1 {
 }
 
 @media (max-width: 480px) {
+    .container {
+        padding: 5px;
+    }
+    
+    .board {
+        padding: 5px;
+        gap: 1px;
+    }
+    
     .cell {
-        width: 32px;
-        height: 32px;
-        font-size: 0.8rem;
+        width: min(28px, 8vw);
+        height: min(28px, 8vw);
+        font-size: 0.75rem;
+        border-radius: 3px;
     }
     
     .board {

@@ -44,36 +44,40 @@ const difficulties = {
 
 // Global audio context for better performance
 let audioContext = null;
+let soundEnabled = true;
 
 // Initialize audio context on first user interaction
 function initAudioContext() {
-    if (!audioContext) {
+    if (!audioContext && soundEnabled) {
         try {
             audioContext = new (window.AudioContext || window.webkitAudioContext)();
         } catch (e) {
             audioContext = null;
+            soundEnabled = false;
         }
     }
 }
 
 // Simple sound effects for compatibility
 function playSound(soundName) {
+    // Skip if sound is disabled
+    if (!soundEnabled) return;
+    
     // Initialize audio context if not already done
     if (!audioContext) {
         initAudioContext();
     }
     
-    // Simple beep using Web Audio API with fallback
+    if (!audioContext) return;
+    
     try {
-        if (audioContext && audioContext.state === 'suspended') {
+        // Resume audio context if suspended
+        if (audioContext.state === 'suspended') {
             audioContext.resume();
         }
         
-        if (!audioContext) return;
-        
         // Special explosion sound with multiple tones
         if (soundName === 'explode') {
-            // Create a more dramatic explosion sound
             const oscillator1 = audioContext.createOscillator();
             const oscillator2 = audioContext.createOscillator();
             const gainNode = audioContext.createGain();
@@ -91,13 +95,13 @@ function playSound(soundName) {
             oscillator2.type = 'square';
             
             // Make it louder and longer
-            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+            gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
             
             oscillator1.start(audioContext.currentTime);
             oscillator2.start(audioContext.currentTime);
-            oscillator1.stop(audioContext.currentTime + 0.5);
-            oscillator2.stop(audioContext.currentTime + 0.5);
+            oscillator1.stop(audioContext.currentTime + 0.3);
+            oscillator2.stop(audioContext.currentTime + 0.3);
             
             return;
         }
@@ -126,7 +130,9 @@ function playSound(soundName) {
         oscillator.start(audioContext.currentTime);
         oscillator.stop(audioContext.currentTime + 0.1);
     } catch (e) {
-        // Silent fallback for unsupported browsers
+        // Disable sound if there's an error
+        soundEnabled = false;
+        console.log('Sound disabled due to error:', e);
     }
 }
 
@@ -336,13 +342,13 @@ function createBoard() {
             cellEl.className = 'cell';
             
             // Mouse events
-            cellEl.onclick = () => handleCellClick(r, c);
-            cellEl.oncontextmenu = (e) => {
+            cellEl.addEventListener('click', () => handleCellClick(r, c), { passive: false });
+            cellEl.addEventListener('contextmenu', (e) => {
                 e.preventDefault();
                 handleRightClick(r, c);
-            };
+            }, { passive: false });
 
-            // Enhanced touch support for mobile
+            // Optimized touch support for mobile
             let touchTimer;
             let touchStarted = false;
             
@@ -354,8 +360,8 @@ function createBoard() {
                         handleRightClick(r, c);
                         touchStarted = false;
                     }
-                }, 500);
-            });
+                }, 400); // Reduced from 500ms for better responsiveness
+            }, { passive: false });
             
             cellEl.addEventListener('touchend', (e) => {
                 e.preventDefault();
@@ -364,17 +370,19 @@ function createBoard() {
                     handleCellClick(r, c);
                     touchStarted = false;
                 }
-            });
+            }, { passive: false });
             
             cellEl.addEventListener('touchmove', (e) => {
-                clearTimeout(touchTimer);
-                touchStarted = false;
-            });
+                if (touchStarted) {
+                    clearTimeout(touchTimer);
+                    touchStarted = false;
+                }
+            }, { passive: true }); // Passive for better scroll performance
             
             cellEl.addEventListener('touchcancel', (e) => {
                 clearTimeout(touchTimer);
                 touchStarted = false;
-            });
+            }, { passive: true });
 
             boardEl.appendChild(cellEl);
             board[r][c] = cell;
