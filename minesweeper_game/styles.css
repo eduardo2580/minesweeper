@@ -89,6 +89,15 @@ body {
     align-items: center;
     padding: 20px;
     color: #ffffff;
+    /* Performance optimizations for mobile */
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    /* Hardware acceleration for smoother performance */
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    will-change: scroll-position;
+    overflow-x: hidden;
 }
 
 .container {
@@ -243,6 +252,13 @@ h1 {
     box-shadow: 
         inset 2px 2px 4px rgba(255, 255, 255, 0.1),
         inset -2px -2px 4px rgba(0, 0, 0, 0.3);
+    /* Performance optimizations */
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    will-change: transform;
 }
 
 .cell:hover {

@@ -42,133 +42,169 @@ const difficulties = {
     hard: { rows: 8, cols: 8, mines: 35 }
 };
 
-// Global audio context for better performance
+// Audio system optimized for iPhone/Safari WebKit
 let audioContext = null;
 let soundEnabled = true;
 let audioUnlocked = false;
+let isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+let isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+let audioInitialized = false;
 
-// Initialize audio context on first user interaction
+// Initialize audio context with WebKit compatibility
 function initAudioContext() {
+    if (audioInitialized) return;
+    audioInitialized = true;
+    
     if (!audioContext && soundEnabled) {
         try {
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            // Use webkitAudioContext for older Safari versions
+            window.AudioContext = window.AudioContext || window.webkitAudioContext;
+            audioContext = new AudioContext();
             
-            // iOS/Safari audio unlock - required for iPhone
-            if (audioContext.state === 'suspended') {
-                const unlockAudio = () => {
-                    if (audioContext.state === 'suspended') {
-                        audioContext.resume().then(() => {
-                            audioUnlocked = true;
-                            console.log('Audio unlocked for iOS');
-                        });
-                    }
-                    // Remove the event listeners after first unlock
-                    document.removeEventListener('touchstart', unlockAudio);
-                    document.removeEventListener('touchend', unlockAudio);
-                    document.removeEventListener('click', unlockAudio);
-                };
-                
-                // Add multiple event listeners for iOS audio unlock
-                document.addEventListener('touchstart', unlockAudio, { once: true });
-                document.addEventListener('touchend', unlockAudio, { once: true });
-                document.addEventListener('click', unlockAudio, { once: true });
+            // iOS requires user interaction to unlock audio
+            if (isIOS || isSafari) {
+                setupIOSAudioUnlock();
             } else {
                 audioUnlocked = true;
             }
+            
+            console.log('Audio context created, state:', audioContext.state);
         } catch (e) {
+            console.warn('Audio context creation failed:', e);
             audioContext = null;
             soundEnabled = false;
-            console.log('Audio context creation failed:', e);
         }
     }
 }
 
-// Simple sound effects for compatibility
-function playSound(soundName) {
-    // Skip if sound is disabled
-    if (!soundEnabled) return;
+// Specific iOS audio unlock with multiple strategies
+function setupIOSAudioUnlock() {
+    if (audioUnlocked) return;
     
-    // Initialize audio context if not already done
-    if (!audioContext) {
-        initAudioContext();
-    }
-    
-    if (!audioContext || !audioUnlocked) return;
-    
-    try {
-        // Resume audio context if suspended (iOS requirement)
-        if (audioContext.state === 'suspended') {
-            audioContext.resume().then(() => {
-                playActualSound(soundName);
-            });
-        } else {
-            playActualSound(soundName);
-        }
-    } catch (e) {
-        // Disable sound if there's an error
-        soundEnabled = false;
-        console.log('Sound disabled due to error:', e);
-    }
-}
-
-// Separate function to actually play the sound
-function playActualSound(soundName) {
-    try {
-        // Special explosion sound with multiple tones
-        if (soundName === 'explode') {
-            const oscillator1 = audioContext.createOscillator();
-            const oscillator2 = audioContext.createOscillator();
+    const unlockAudio = async (event) => {
+        if (audioUnlocked) return;
+        
+        try {
+            if (audioContext && audioContext.state === 'suspended') {
+                await audioContext.resume();
+            }
+            
+            // Create a silent sound to fully unlock audio on iOS
+            const oscillator = audioContext.createOscillator();
             const gainNode = audioContext.createGain();
             
-            oscillator1.connect(gainNode);
-            oscillator2.connect(gainNode);
+            oscillator.connect(gainNode);
             gainNode.connect(audioContext.destination);
             
-            // Low rumbling explosion sound
-            oscillator1.frequency.value = 80;
-            oscillator1.type = 'sawtooth';
+            gainNode.gain.value = 0; // Silent
+            oscillator.frequency.value = 440;
+            oscillator.start();
+            oscillator.stop(audioContext.currentTime + 0.01);
             
-            // Higher frequency for the blast
-            oscillator2.frequency.value = 200;
-            oscillator2.type = 'square';
+            audioUnlocked = true;
+            console.log('iOS Audio unlocked successfully');
             
-            // Make it louder and longer
-            gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+            // Clean up event listeners once unlocked
+            removeUnlockListeners();
             
-            oscillator1.start(audioContext.currentTime);
-            oscillator2.start(audioContext.currentTime);
-            oscillator1.stop(audioContext.currentTime + 0.2);
-            oscillator2.stop(audioContext.currentTime + 0.2);
-            
-            return;
+        } catch (e) {
+            console.warn('iOS audio unlock failed:', e);
         }
-        
-        // Regular sounds
+    };
+    
+    // Store reference to remove listeners later
+    window.audioUnlockHandler = unlockAudio;
+    
+    // Multiple event types for better iOS compatibility
+    document.addEventListener('touchstart', unlockAudio, { once: true, passive: true });
+    document.addEventListener('touchend', unlockAudio, { once: true, passive: true });
+    document.addEventListener('click', unlockAudio, { once: true, passive: true });
+    document.addEventListener('keydown', unlockAudio, { once: true, passive: true });
+}
+
+// Clean up audio unlock listeners
+function removeUnlockListeners() {
+    if (window.audioUnlockHandler) {
+        document.removeEventListener('touchstart', window.audioUnlockHandler);
+        document.removeEventListener('touchend', window.audioUnlockHandler);
+        document.removeEventListener('click', window.audioUnlockHandler);
+        document.removeEventListener('keydown', window.audioUnlockHandler);
+        window.audioUnlockHandler = null;
+    }
+}
+
+// WebKit-optimized sound function
+function playSound(soundName) {
+    if (!soundEnabled || !audioContext) return;
+    
+    // For iOS, ensure audio is unlocked first
+    if ((isIOS || isSafari) && !audioUnlocked) {
+        return; // Silently fail instead of logging
+    }
+    
+    // Use requestAnimationFrame for better iOS performance
+    requestAnimationFrame(() => {
+        try {
+            // Resume context if needed (WebKit requirement)
+            if (audioContext.state === 'suspended') {
+                audioContext.resume().then(() => {
+                    playActualSound(soundName);
+                }).catch(() => {
+                    // Silently fail
+                });
+            } else if (audioContext.state === 'running') {
+                playActualSound(soundName);
+            }
+        } catch (e) {
+            // Silently disable sound on error
+            soundEnabled = false;
+        }
+    });
+}
+
+// Optimized sound generation for WebKit
+function playActualSound(soundName) {
+    if (!audioContext || audioContext.state !== 'running') return;
+    
+    try {
+        // Simple, WebKit-compatible sound generation
         const oscillator = audioContext.createOscillator();
         const gainNode = audioContext.createGain();
         
         oscillator.connect(gainNode);
         gainNode.connect(audioContext.destination);
         
-        // Different frequencies for different sounds
-        const frequencies = {
-            click: 800,
-            flag: 600,
-            win: 1000,
-            reveal: 400
+        // Sound frequencies optimized for mobile speakers
+        const soundConfig = {
+            click: { freq: 800, duration: 0.05, volume: 0.08 },
+            flag: { freq: 1000, duration: 0.08, volume: 0.1 },
+            reveal: { freq: 600, duration: 0.06, volume: 0.08 },
+            win: { freq: 1200, duration: 0.15, volume: 0.12 },
+            explode: { freq: 150, duration: 0.2, volume: 0.15 }
         };
         
-        oscillator.frequency.value = frequencies[soundName] || 400;
-        oscillator.type = 'sine';
+        const config = soundConfig[soundName] || soundConfig.click;
         
-        gainNode.gain.setValueAtTime(0.08, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.08);
+        oscillator.frequency.value = config.freq;
+        oscillator.type = soundName === 'explode' ? 'sawtooth' : 'sine';
         
-        oscillator.start(audioContext.currentTime);
-        oscillator.stop(audioContext.currentTime + 0.08);
+        // WebKit-compatible gain envelope
+        const now = audioContext.currentTime;
+        gainNode.gain.setValueAtTime(0, now);
+        gainNode.gain.linearRampToValueAtTime(config.volume, now + 0.01);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, now + config.duration);
+        
+        oscillator.start(now);
+        oscillator.stop(now + config.duration);
+        
+        // Clean up oscillator reference
+        oscillator.onended = () => {
+            oscillator.disconnect();
+            gainNode.disconnect();
+        };
+        
     } catch (e) {
-        console.log('Error playing sound:', e);
+        // Silently fail
     }
 }
 
@@ -377,43 +413,58 @@ function createBoard() {
             const cellEl = document.createElement('div');
             cellEl.className = 'cell';
             
-            // Mouse events
-            cellEl.addEventListener('click', () => handleCellClick(r, c), { passive: false });
+            // Mouse events with passive optimization
+            cellEl.addEventListener('click', () => handleCellClick(r, c), { passive: true });
             cellEl.addEventListener('contextmenu', (e) => {
                 e.preventDefault();
                 handleRightClick(r, c);
             }, { passive: false });
 
-            // Optimized touch support for mobile
+            // Optimized touch support for mobile - prevent freezing
             let touchTimer;
             let touchStarted = false;
+            let touchStartTime = 0;
             
             cellEl.addEventListener('touchstart', (e) => {
-                e.preventDefault();
+                if (e.touches.length > 1) return; // Ignore multi-touch
+                
                 touchStarted = true;
+                touchStartTime = Date.now();
+                
+                // Long press for flag - shorter delay for better responsiveness
                 touchTimer = setTimeout(() => {
                     if (touchStarted) {
+                        // Haptic feedback on supported devices
+                        if (navigator.vibrate) {
+                            navigator.vibrate(50);
+                        }
                         handleRightClick(r, c);
                         touchStarted = false;
                     }
-                }, 400); // Reduced from 500ms for better responsiveness
-            }, { passive: false });
+                }, 350); // Reduced from 400ms
+            }, { passive: true });
             
             cellEl.addEventListener('touchend', (e) => {
                 e.preventDefault();
-                if (touchStarted) {
+                const touchDuration = Date.now() - touchStartTime;
+                
+                if (touchStarted && touchDuration < 350) {
                     clearTimeout(touchTimer);
-                    handleCellClick(r, c);
+                    // Use requestAnimationFrame to prevent blocking
+                    requestAnimationFrame(() => {
+                        handleCellClick(r, c);
+                    });
                     touchStarted = false;
                 }
             }, { passive: false });
             
             cellEl.addEventListener('touchmove', (e) => {
+                // Cancel long press if finger moves too much
                 if (touchStarted) {
                     clearTimeout(touchTimer);
                     touchStarted = false;
                 }
-            }, { passive: true }); // Passive for better scroll performance
+            }, { passive: true });
             
             cellEl.addEventListener('touchcancel', (e) => {
                 clearTimeout(touchTimer);
@@ -539,13 +590,60 @@ function revealCell(row, col) {
         cell.element.classList.add(`n${cell.neighborMines}`);
         playSound('click');
     } else {
-        // Reveal neighbors for empty cells
+        // Iterative flood fill to prevent stack overflow and freezing
+        revealEmptyArea(row, col);
+    }
+}
+
+// Iterative flood fill to prevent stack overflow on large empty areas
+function revealEmptyArea(startRow, startCol) {
+    const queue = [{row: startRow, col: startCol}];
+    const revealed = new Set();
+    
+    while (queue.length > 0) {
+        const {row, col} = queue.shift();
+        const key = `${row},${col}`;
+        
+        if (revealed.has(key)) continue;
+        revealed.add(key);
+        
+        // Check all neighbors
         for (let r = Math.max(0, row - 1); r <= Math.min(gameState.rows - 1, row + 1); r++) {
             for (let c = Math.max(0, col - 1); c <= Math.min(gameState.cols - 1, col + 1); c++) {
-                if (r !== row || c !== col) {
-                    setTimeout(() => revealCell(r, c), 30);
+                if (r === row && c === col) continue;
+                
+                const neighborCell = board[r][c];
+                if (neighborCell.isRevealed || neighborCell.isFlagged || neighborCell.isMine) continue;
+                
+                const neighborKey = `${r},${c}`;
+                if (revealed.has(neighborKey)) continue;
+                
+                // Reveal this neighbor
+                neighborCell.isRevealed = true;
+                neighborCell.element.classList.add('revealed');
+                
+                if (neighborCell.neighborMines > 0) {
+                    neighborCell.element.textContent = neighborCell.neighborMines;
+                    neighborCell.element.classList.add(`n${neighborCell.neighborMines}`);
+                } else {
+                    // Add to queue for further expansion if it's also empty
+                    queue.push({row: r, col: c});
                 }
             }
+        }
+        
+        // Process in chunks to prevent UI freezing
+        if (queue.length > 20) {
+            setTimeout(() => {
+                if (queue.length > 0) {
+                    const batch = queue.splice(0, 10);
+                    queue.unshift(...batch);
+                    requestAnimationFrame(() => {
+                        // Continue processing
+                    });
+                }
+            }, 1);
+            break;
         }
     }
 }
@@ -713,8 +811,38 @@ loadGameData();
 updateAllDisplays(); // Update displays without creating board
 setLanguage('en');
 
-// Initialize audio context early for iOS compatibility
-initAudioContext();
+// Early audio initialization for iOS compatibility
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize audio context as early as possible
+    initAudioContext();
+    
+    // iOS-specific audio unlock on page load
+    if (isIOS || isSafari) {
+        // Additional iOS audio setup
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden && audioContext && audioContext.state === 'suspended') {
+                audioContext.resume().catch(() => {
+                    // Silently handle resume failures
+                });
+            }
+        });
+        
+        // Enable hardware acceleration for iOS
+        document.body.style.webkitTransform = 'translateZ(0)';
+        document.body.style.transform = 'translateZ(0)';
+    }
+    
+    // Fix language buttons to use proper event listeners
+    const langButtons = document.querySelectorAll('.lang-btn');
+    langButtons.forEach(btn => {
+        const lang = btn.textContent.toLowerCase().includes('en') ? 'en' :
+                    btn.textContent.toLowerCase().includes('es') ? 'es' : 'pt';
+        
+        btn.addEventListener('click', (e) => {
+            setLanguage(lang, e);
+        }, { passive: true });
+    });
+});
 
 // Hide board initially
 document.getElementById('board').style.display = 'none';
@@ -723,10 +851,24 @@ document.getElementById('board').style.display = 'none';
 const t = translations['en'];
 document.getElementById('message').textContent = t.clickToStart;
 
-// Add event listeners for language buttons when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-    // Fix language buttons to use onclick attribute or add proper event listeners
-    document.querySelector('.lang-btn[onclick*="en"]').onclick = () => setLanguage('en');
-    document.querySelector('.lang-btn[onclick*="es"]').onclick = () => setLanguage('es');
-    document.querySelector('.lang-btn[onclick*="pt"]').onclick = () => setLanguage('pt');
-});
+// Additional performance optimizations for mobile
+if ('serviceWorker' in navigator) {
+    // Optional: register service worker for better caching
+    // This can improve loading times on subsequent visits
+}
+
+// Prevent zoom on double-tap for iOS
+document.addEventListener('touchstart', function(event) {
+    if (event.touches.length > 1) {
+        event.preventDefault();
+    }
+}, { passive: false });
+
+let lastTouchEnd = 0;
+document.addEventListener('touchend', function(event) {
+    const now = (new Date()).getTime();
+    if (now - lastTouchEnd <= 300) {
+        event.preventDefault();
+    }
+    lastTouchEnd = now;
+}, { passive: false });
