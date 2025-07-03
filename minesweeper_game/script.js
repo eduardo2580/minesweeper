@@ -334,20 +334,47 @@ function createBoard() {
 
             const cellEl = document.createElement('div');
             cellEl.className = 'cell';
+            
+            // Mouse events
             cellEl.onclick = () => handleCellClick(r, c);
             cellEl.oncontextmenu = (e) => {
                 e.preventDefault();
                 handleRightClick(r, c);
             };
 
-            // Touch support for mobile
+            // Enhanced touch support for mobile
             let touchTimer;
-            cellEl.ontouchstart = (e) => {
+            let touchStarted = false;
+            
+            cellEl.addEventListener('touchstart', (e) => {
                 e.preventDefault();
-                touchTimer = setTimeout(() => handleRightClick(r, c), 500);
-            };
-            cellEl.ontouchend = () => clearTimeout(touchTimer);
-            cellEl.ontouchmove = () => clearTimeout(touchTimer);
+                touchStarted = true;
+                touchTimer = setTimeout(() => {
+                    if (touchStarted) {
+                        handleRightClick(r, c);
+                        touchStarted = false;
+                    }
+                }, 500);
+            });
+            
+            cellEl.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                if (touchStarted) {
+                    clearTimeout(touchTimer);
+                    handleCellClick(r, c);
+                    touchStarted = false;
+                }
+            });
+            
+            cellEl.addEventListener('touchmove', (e) => {
+                clearTimeout(touchTimer);
+                touchStarted = false;
+            });
+            
+            cellEl.addEventListener('touchcancel', (e) => {
+                clearTimeout(touchTimer);
+                touchStarted = false;
+            });
 
             boardEl.appendChild(cellEl);
             board[r][c] = cell;
