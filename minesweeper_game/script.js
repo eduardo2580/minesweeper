@@ -45,15 +45,40 @@ const difficulties = {
 // Global audio context for better performance
 let audioContext = null;
 let soundEnabled = true;
+let audioUnlocked = false;
 
 // Initialize audio context on first user interaction
 function initAudioContext() {
     if (!audioContext && soundEnabled) {
         try {
             audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            
+            // iOS/Safari audio unlock - required for iPhone
+            if (audioContext.state === 'suspended') {
+                const unlockAudio = () => {
+                    if (audioContext.state === 'suspended') {
+                        audioContext.resume().then(() => {
+                            audioUnlocked = true;
+                            console.log('Audio unlocked for iOS');
+                        });
+                    }
+                    // Remove the event listeners after first unlock
+                    document.removeEventListener('touchstart', unlockAudio);
+                    document.removeEventListener('touchend', unlockAudio);
+                    document.removeEventListener('click', unlockAudio);
+                };
+                
+                // Add multiple event listeners for iOS audio unlock
+                document.addEventListener('touchstart', unlockAudio, { once: true });
+                document.addEventListener('touchend', unlockAudio, { once: true });
+                document.addEventListener('click', unlockAudio, { once: true });
+            } else {
+                audioUnlocked = true;
+            }
         } catch (e) {
             audioContext = null;
             soundEnabled = false;
+            console.log('Audio context creation failed:', e);
         }
     }
 }
@@ -68,14 +93,27 @@ function playSound(soundName) {
         initAudioContext();
     }
     
-    if (!audioContext) return;
+    if (!audioContext || !audioUnlocked) return;
     
     try {
-        // Resume audio context if suspended
+        // Resume audio context if suspended (iOS requirement)
         if (audioContext.state === 'suspended') {
-            audioContext.resume();
+            audioContext.resume().then(() => {
+                playActualSound(soundName);
+            });
+        } else {
+            playActualSound(soundName);
         }
-        
+    } catch (e) {
+        // Disable sound if there's an error
+        soundEnabled = false;
+        console.log('Sound disabled due to error:', e);
+    }
+}
+
+// Separate function to actually play the sound
+function playActualSound(soundName) {
+    try {
         // Special explosion sound with multiple tones
         if (soundName === 'explode') {
             const oscillator1 = audioContext.createOscillator();
@@ -95,13 +133,13 @@ function playSound(soundName) {
             oscillator2.type = 'square';
             
             // Make it louder and longer
-            gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+            gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
             
             oscillator1.start(audioContext.currentTime);
             oscillator2.start(audioContext.currentTime);
-            oscillator1.stop(audioContext.currentTime + 0.3);
-            oscillator2.stop(audioContext.currentTime + 0.3);
+            oscillator1.stop(audioContext.currentTime + 0.2);
+            oscillator2.stop(audioContext.currentTime + 0.2);
             
             return;
         }
@@ -124,15 +162,13 @@ function playSound(soundName) {
         oscillator.frequency.value = frequencies[soundName] || 400;
         oscillator.type = 'sine';
         
-        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+        gainNode.gain.setValueAtTime(0.08, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.08);
         
         oscillator.start(audioContext.currentTime);
-        oscillator.stop(audioContext.currentTime + 0.1);
+        oscillator.stop(audioContext.currentTime + 0.08);
     } catch (e) {
-        // Disable sound if there's an error
-        soundEnabled = false;
-        console.log('Sound disabled due to error:', e);
+        console.log('Error playing sound:', e);
     }
 }
 
@@ -676,6 +712,9 @@ function updateAllDisplays() {
 loadGameData();
 updateAllDisplays(); // Update displays without creating board
 setLanguage('en');
+
+// Initialize audio context early for iOS compatibility
+initAudioContext();
 
 // Hide board initially
 document.getElementById('board').style.display = 'none';
