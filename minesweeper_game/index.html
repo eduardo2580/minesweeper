@@ -84,15 +84,15 @@ The layout is containerized with responsive design principles, ensuring optimal 
         <h1 id="title">💣 MINESWEEPER</h1>
         
         <div class="controls">
-            <button class="lang-btn active" onclick="setLanguage('en')">EN</button>
-            <button class="lang-btn" onclick="setLanguage('es')">ES</button>
-            <button class="lang-btn" onclick="setLanguage('pt')">PT</button>
+            <button class="lang-btn active" data-lang="en">EN</button>
+            <button class="lang-btn" data-lang="es">ES</button>
+            <button class="lang-btn" data-lang="pt">PT</button>
         </div>
         
         <div class="difficulty-controls">
-            <button class="diff-btn active" onclick="setDifficulty('easy')" id="easyBtn">🟢 Easy</button>
-            <button class="diff-btn" onclick="setDifficulty('medium')" id="mediumBtn">🟡 Medium</button>
-            <button class="diff-btn" onclick="setDifficulty('hard')" id="hardBtn">🔴 Hard</button>
+            <button class="diff-btn active" data-diff="easy" id="easyBtn">🟢 Easy</button>
+            <button class="diff-btn" data-diff="medium" id="mediumBtn">🟡 Medium</button>
+            <button class="diff-btn" data-diff="hard" id="hardBtn">🔴 Hard</button>
         </div>
         
         <div class="stats">
@@ -118,9 +118,9 @@ The layout is containerized with responsive design principles, ensuring optimal 
         </div>
         
         <div class="game-buttons">
-            <button class="btn" onclick="newGame()" id="newGameBtn">🎮 New Game</button>
-            <button class="btn" onclick="toggleFlag()" id="flagBtn">🚩 Flag</button>
-            <button class="btn" onclick="resetData()" id="resetBtn">🔄 Reset Data</button>
+            <button class="btn" id="newGameBtn">🎮 New Game</button>
+            <button class="btn" id="flagBtn">🚩 Flag</button>
+            <button class="btn" id="resetBtn">🔄 Reset Data</button>
         </div>
         
         <div class="board" id="board" style="display: none;"></div>
